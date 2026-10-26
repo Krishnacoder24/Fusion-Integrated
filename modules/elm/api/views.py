@@ -21,6 +21,7 @@ class LeaveApplicationSerializer(serializers.ModelSerializer):
             "end_date",
             "requested_days",
             "reason",
+            "half_day_period",
             "status",
             "substitute_user_id",
             "created_at",

@@ -32,6 +32,19 @@ class LeaveApplication(TimeStampedModel, UserScopedModel):
     ]
 
     leave_type = models.CharField(max_length=3, choices=LEAVE_TYPES)
+
+    HALF_DAY_PERIODS = [
+        ("first_half", "First Half"),
+        ("second_half", "Second Half"),
+    ]
+
+    half_day_period = models.CharField(
+        max_length=11,
+        choices=HALF_DAY_PERIODS,
+        null=True,
+        blank=True,
+    )
+
     start_date = models.DateField()
     end_date = models.DateField()
     requested_days = models.DecimalField(
