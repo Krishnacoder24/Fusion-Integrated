@@ -1,5 +1,10 @@
 """API views for Employee Leave Management."""
 
+from django.db import transaction
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework import status
+
 from rest_framework import generics, serializers
 from rest_framework.exceptions import ValidationError
 
@@ -72,3 +77,62 @@ class MyLeaveApplicationsView(generics.ListCreateAPIView):
     def perform_create(self, serializer):
         principal = self.request.principal
         serializer.save(user_id=principal.user_id)
+
+
+
+
+
+
+class WithdrawLeaveApplicationView(APIView):
+    permission_classes = [
+        IsAuthenticatedPrincipal,
+        HasModuleGrant("elm"),
+        HasPermission("elm.application.withdraw"),
+    ]
+
+    def post(self, request, pk):
+        principal = request.principal
+
+        with transaction.atomic():
+            try:
+                application = (
+                    LeaveApplication.objects
+                    .select_for_update()
+                    .get(pk=pk, user_id=principal.user_id)
+                )
+            except LeaveApplication.DoesNotExist:
+                return Response(
+                    {"detail": "Leave application not found."},
+                    status=status.HTTP_404_NOT_FOUND,
+                )
+
+            withdrawable_statuses = {
+                "submitted",
+                "pending_substitute",
+                "pending_unit_head",
+                "pending_sanction",
+                "recommended",
+            }
+
+            if application.status not in withdrawable_statuses:
+                return Response(
+                    {
+                        "detail": (
+                            "Only leave applications awaiting final approval "
+                            "can be withdrawn."
+                        )
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            application.status = "withdrawn"
+            application.save(update_fields=["status", "updated_at"])
+
+        return Response(
+            {
+                "id": application.pk,
+                "status": application.status,
+                "detail": "Leave application withdrawn.",
+            },
+            status=status.HTTP_200_OK,
+        )

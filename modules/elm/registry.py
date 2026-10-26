@@ -27,6 +27,7 @@ PERMISSIONS = [
     ("elm.application.create", "Submit leave applications"),
     ("elm.application.review", "Review leave applications"),
     ("elm.application.sanction", "Sanction leave applications"),
+    ("elm.application.withdraw", "Withdraw own pending leave applications"),
 ]
 
 SYSTEM_PERMISSIONS = []
@@ -35,6 +36,7 @@ ROLE_GRANTS = {
     "employee": [
         "elm.application.view_self",
         "elm.application.create",
+        "elm.application.withdraw",
     ],
     "Unit Head": [
         "elm.application.view_self",
